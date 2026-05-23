@@ -9,10 +9,10 @@ App web/mobile moderna para seguimiento de gimnasio, fuerza y progreso fisico.
 - Historial automatico con volumen, duracion y ejercicios.
 - Estadisticas con graficos de fuerza, volumen y series por musculo.
 - Mapa muscular visual con series y fatiga estimada.
-- Perfil fisico con peso corporal, medidas, objetivos y fotos mock.
+- Perfil fisico con peso corporal, medidas, objetivos y fotos de progreso vacias hasta cargar datos reales.
 - Calendario mensual de entrenamientos.
 - Capa inicial de Supabase y `supabase/schema.sql`.
-- Datos mock para probar la app al instante.
+- Estado inicial vacio: sin entrenamientos, historial ni estadisticas precargadas.
 
 ## Correr localmente
 
@@ -35,4 +35,4 @@ NEXT_PUBLIC_SUPABASE_URL=tu_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=tu_anon_key
 ```
 
-Por ahora la UI usa datos mock de `data/mock.ts`. El siguiente paso natural es reemplazar esos mocks por consultas a Supabase y formularios reales de alta/edicion.
+La UI arranca vacia desde `data/initial-state.ts`. El siguiente paso natural es reemplazar ese estado inicial por consultas a Supabase y formularios reales de alta/edicion.

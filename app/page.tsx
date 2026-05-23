@@ -21,7 +21,7 @@ import { AppShell, ViewId } from "@/components/shell";
 import { StatCard } from "@/components/stat-card";
 import { BodyWeightChart, MuscleBarChart, StrengthChart, VolumeAreaChart } from "@/components/charts";
 import { HumanMuscleMap } from "@/components/human-muscle-map";
-import { bodyMetrics, goals, photos, workouts } from "@/data/mock";
+import { bodyMetrics, goals, photos, workouts } from "@/data/initial-state";
 import { detectWeakSpots, fatigueByMuscle, personalRecords, strengthProgress, totalSetsByMuscle, volumeByMuscle, weeklySummary, workoutVolume } from "@/lib/metrics";
 
 const summary = weeklySummary(workouts);
@@ -71,15 +71,15 @@ function Dashboard() {
       />
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard icon={Flame} label="Racha activa" value="12 dias" detail="4 entrenos esta semana" tone="text-rosefit" />
-        <StatCard icon={Gauge} label="Volumen total" value={`${Math.round(summary.totalVolume).toLocaleString("es-AR")} kg`} detail="+8.4% vs semana anterior" tone="text-cyanfit" />
-        <StatCard icon={Trophy} label="PR destacado" value="Sentadilla 90 kg" detail="Mejor serie registrada" tone="text-goldfit" />
-        <StatCard icon={Activity} label="Esfuerzo medio" value={`${summary.avgEffort}/10`} detail="Fatiga controlada" />
+        <StatCard icon={Flame} label="Racha activa" value="0 dias" detail="Sin entrenamientos registrados" tone="text-rosefit" />
+        <StatCard icon={Gauge} label="Volumen total" value={`${Math.round(summary.totalVolume).toLocaleString("es-AR")} kg`} detail="Comienza desde tu primer entreno" tone="text-cyanfit" />
+        <StatCard icon={Trophy} label="PR destacado" value="Sin PRs" detail="Se crean al guardar marcas" tone="text-goldfit" />
+        <StatCard icon={Activity} label="Esfuerzo medio" value={`${summary.avgEffort}/10`} detail="Sin fatiga registrada" />
       </section>
 
       <section className="mt-4 grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-        <Panel title="Progreso de fuerza" subtitle="Press banca, mejor peso por sesion">
-          <StrengthChart data={strengthProgress(workouts, "Press banca")} />
+        <Panel title="Progreso de fuerza" subtitle="Mejor peso por ejercicio">
+          <EmptyChart data={strengthProgress(workouts, "")}><StrengthChart data={strengthProgress(workouts, "")} /></EmptyChart>
         </Panel>
         <Panel title="Mapa muscular" subtitle="Series, frecuencia y fatiga semanal">
           <HumanMuscleMap data={fatigueByMuscle(workouts)} />
@@ -88,17 +88,18 @@ function Dashboard() {
 
       <section className="mt-4 grid gap-4 lg:grid-cols-3">
         <Panel title="Volumen por sesion" subtitle="Peso movido total">
-          <VolumeAreaChart data={volumeTrend} />
+          <EmptyChart data={volumeTrend}><VolumeAreaChart data={volumeTrend} /></EmptyChart>
         </Panel>
         <Panel title="Recomendaciones" subtitle="Lectura automatica">
           <div className="space-y-3">
-            <Insight icon={Sparkles} title="Progresion sugerida" text="Si el press banca se siente con RIR 2, subi 2.5 kg la proxima sesion." />
-            <Insight icon={RotateCcw} title="Balance muscular" text={weakSpots.length ? `Dale prioridad a ${weakSpots.join(", ")} esta semana.` : "Tu balance de series esta parejo."} />
-            <Insight icon={CheckCircle2} title="Resumen semanal" text={`${summary.days} dias entrenados, ${summary.totalSets} series y buen nivel de constancia.`} />
+            <Insight icon={Sparkles} title="Progresion sugerida" text="Guarda tu primer entrenamiento para recibir recomendaciones." />
+            <Insight icon={RotateCcw} title="Balance muscular" text={workouts.length && weakSpots.length ? `Dale prioridad a ${weakSpots.join(", ")} esta semana.` : "Aun no hay datos para comparar musculos."} />
+            <Insight icon={CheckCircle2} title="Resumen semanal" text={`${summary.days} dias entrenados, ${summary.totalSets} series registradas.`} />
           </div>
         </Panel>
         <Panel title="Records personales" subtitle="Tus mejores marcas">
           <div className="space-y-2">
+            {records.length === 0 && <EmptyState title="Todavia no hay records" text="Tus PRs apareceran cuando guardes entrenamientos reales." />}
             {records.map((record) => (
               <div key={record.name} className="flex items-center justify-between rounded-lg border border-line bg-white/[0.04] p-3">
                 <div>
@@ -121,7 +122,7 @@ function WorkoutScreen() {
     <>
       <PageHeader title="Entrenamiento rapido" subtitle="Pensado para cargar datos en el gym sin perder tiempo entre series." />
       <section className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
-        <Panel title="Rutina de hoy" subtitle="Lower, fuerza y volumen">
+        <Panel title="Rutina de hoy" subtitle="ElegÃ­ una rutina para empezar desde cero">
           <div className="grid gap-3 sm:grid-cols-2">
             {["Push", "Pull", "Piernas", "Upper", "Lower", "Personalizada"].map((routine) => (
               <button key={routine} className="rounded-lg border border-line bg-white/[0.04] p-4 text-left transition hover:border-limefit hover:bg-limefit/10">
@@ -135,9 +136,10 @@ function WorkoutScreen() {
             Agregar ejercicio
           </button>
         </Panel>
-        <Panel title={current.routine} subtitle={`${current.date} | ${current.durationMin} min | esfuerzo ${current.effort}/10`}>
+        <Panel title={current?.routine ?? "Entreno sin iniciar"} subtitle={current ? `${current.date} | ${current.durationMin} min | esfuerzo ${current.effort}/10` : "Guarda tu primer entrenamiento para crear historial"}>
           <div className="space-y-3">
-            {current.exercises.map((exercise) => (
+            {!current && <EmptyState title="Sin ejercicios cargados" text="Agrega ejercicios, series, repeticiones, peso y RIR cuando empieces." />}
+            {current?.exercises.map((exercise) => (
               <div key={exercise.id} className="rounded-lg border border-line bg-white/[0.04] p-3">
                 <div className="flex items-center justify-between gap-3">
                   <div>
@@ -169,6 +171,7 @@ function HistoryScreen() {
     <>
       <PageHeader title="Historial" subtitle="Cada entrenamiento queda guardado para comparar semanas y detectar avances reales." />
       <section className="space-y-3">
+        {workouts.length === 0 && <EmptyState title="Historial vacio" text="Cuando guardes entrenamientos, apareceran aca para comparar tu progreso." />}
         {workouts.slice().reverse().map((workout) => (
           <article key={workout.id} className="glass rounded-lg p-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -195,16 +198,16 @@ function StatsScreen() {
       <PageHeader title="Estadisticas" subtitle="Graficos semanales y mensuales para entender fuerza, volumen, frecuencia y balance muscular." />
       <section className="grid gap-4 xl:grid-cols-2">
         <Panel title="Volumen por musculo" subtitle="Kg totales acumulados">
-          <MuscleBarChart data={volumeByMuscle(workouts)} />
+          <EmptyChart data={workouts}><MuscleBarChart data={volumeByMuscle(workouts)} /></EmptyChart>
         </Panel>
         <Panel title="Series por musculo" subtitle="Cantidad de trabajo semanal">
-          <MuscleBarChart data={totalSetsByMuscle(workouts)} />
+          <EmptyChart data={workouts}><MuscleBarChart data={totalSetsByMuscle(workouts)} /></EmptyChart>
         </Panel>
-        <Panel title="Sentadilla" subtitle="Progreso de fuerza">
-          <StrengthChart data={strengthProgress(workouts, "Sentadilla")} />
+        <Panel title="Fuerza principal" subtitle="Progreso de fuerza">
+          <EmptyChart data={strengthProgress(workouts, "")}><StrengthChart data={strengthProgress(workouts, "")} /></EmptyChart>
         </Panel>
-        <Panel title="Peso muerto" subtitle="Progreso de fuerza">
-          <StrengthChart data={strengthProgress(workouts, "Peso muerto")} />
+        <Panel title="Fuerza secundaria" subtitle="Progreso de fuerza">
+          <EmptyChart data={strengthProgress(workouts, "")}><StrengthChart data={strengthProgress(workouts, "")} /></EmptyChart>
         </Panel>
       </section>
     </>
@@ -212,13 +215,13 @@ function StatsScreen() {
 }
 
 function ProfileScreen() {
-  const latest = bodyMetrics[bodyMetrics.length - 1];
+  const latest = bodyMetrics[bodyMetrics.length - 1] ?? { bodyWeight: 0, chest: 0, waist: 0, arm: 0, thigh: 0 };
   return (
     <>
       <PageHeader title="Perfil fisico" subtitle="Peso corporal, medidas, fotos de progreso y objetivos principales." />
       <section className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
         <Panel title="Peso corporal" subtitle="Promedio semanal">
-          <BodyWeightChart data={bodyMetrics} />
+          <EmptyChart data={bodyMetrics}><BodyWeightChart data={bodyMetrics} /></EmptyChart>
           <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
             <Mini label="Peso" value={`${latest.bodyWeight} kg`} />
             <Mini label="Pecho" value={`${latest.chest} cm`} />
@@ -228,6 +231,7 @@ function ProfileScreen() {
         </Panel>
         <Panel title="Objetivos" subtitle="Metas visibles y medibles">
           <div className="space-y-3">
+            {goals.length === 0 && <EmptyState title="Sin objetivos" text="Crea objetivos cuando quieras medir fuerza, peso o constancia." />}
             {goals.map((goal) => (
               <div key={goal.id} className="rounded-lg border border-line bg-white/[0.04] p-3">
                 <div className="flex items-center justify-between">
@@ -241,8 +245,9 @@ function ProfileScreen() {
             ))}
           </div>
         </Panel>
-        <Panel title="Fotos de progreso" subtitle="Mock visual listo para conectar a storage">
+        <Panel title="Fotos de progreso" subtitle="Sin fotos precargadas">
           <div className="grid gap-3 sm:grid-cols-2">
+            {photos.length === 0 && <EmptyState title="Sin fotos" text="Tus fotos apareceran cuando las subas desde tu perfil." />}
             {photos.map((photo) => (
               <div key={photo.id} className={`flex aspect-[4/5] flex-col justify-between rounded-lg border border-line bg-gradient-to-br ${photo.tone} p-4`}>
                 <Camera className="text-white/75" />
@@ -273,7 +278,7 @@ function CalendarScreen() {
   return (
     <>
       <PageHeader title="Calendario" subtitle="Vista mensual de entrenamientos, rachas y dias de descanso." />
-      <Panel title="Mayo 2026" subtitle="Frecuencia de entrenamiento">
+      <Panel title="Calendario" subtitle="Frecuencia de entrenamiento">
         <div className="grid grid-cols-7 gap-2">
           {days.map((day) => (
             <div key={day} className={`flex aspect-square flex-col justify-between rounded-lg border p-2 ${trained.has(day) ? "border-limefit bg-limefit text-ink" : "border-line bg-white/[0.04] text-zinc-400"}`}>
@@ -293,7 +298,7 @@ function SettingsScreen() {
       <PageHeader title="Configuracion" subtitle="Preferencias basicas para una app lista para crecer con datos reales." />
       <section className="grid gap-4 lg:grid-cols-2">
         <Panel title="Datos" subtitle="Persistencia">
-          <Setting label="Modo mock" value="Activo" />
+          <Setting label="Datos iniciales" value="Vacio" />
           <Setting label="Supabase" value="Listo para conectar" />
           <Setting label="Unidad de peso" value="Kilogramos" />
         </Panel>
@@ -322,6 +327,23 @@ function Panel({ title, subtitle, children }: { title: string; subtitle: string;
   );
 }
 
+
+function EmptyState({ title, text }: { title: string; text: string }) {
+  return (
+    <div className="rounded-lg border border-dashed border-line bg-black/20 p-5 text-center">
+      <p className="font-semibold text-white">{title}</p>
+      <p className="mt-2 text-sm leading-6 text-zinc-500">{text}</p>
+    </div>
+  );
+}
+
+function EmptyChart<T>({ data, children }: { data: T[]; children: React.ReactNode }) {
+  if (data.length === 0) {
+    return <EmptyState title="Sin datos para graficar" text="El grafico se activa cuando guardes registros reales." />;
+  }
+
+  return <>{children}</>;
+}
 function Insight({ icon: Icon, title, text }: { icon: LucideIcon; title: string; text: string }) {
   return (
     <div className="rounded-lg border border-line bg-white/[0.04] p-3">

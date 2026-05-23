@@ -58,7 +58,7 @@ export function personalRecords(workouts: Workout[]) {
 export function weeklySummary(workouts: Workout[]) {
   const totalVolume = workouts.reduce((total, workout) => total + workoutVolume(workout), 0);
   const totalSets = workouts.reduce((total, workout) => total + workout.exercises.reduce((sum, exercise) => sum + exercise.sets.length, 0), 0);
-  const avgEffort = workouts.reduce((total, workout) => total + workout.effort, 0) / workouts.length;
+  const avgEffort = workouts.length ? workouts.reduce((total, workout) => total + workout.effort, 0) / workouts.length : 0;
   return {
     totalVolume,
     totalSets,
